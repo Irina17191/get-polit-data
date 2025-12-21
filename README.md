@@ -32,4 +32,12 @@ politdata_pipeline/
 
 
 
+PostgreSQL ієрархія:
+```
+PostgreSQL сервер
+ └── БАЗА ДАНИХ
+      └── СХЕМА (public)
+           └── ТАБЛИЦІ
+```
+
 
