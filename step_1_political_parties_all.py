@@ -33,7 +33,7 @@ def run_step_1():
             }
         }
 
-        response = requests.post(url, headers=headers, json=payload, verify=False)
+        response = requests.post(url, headers=headers, json=payload) #, verify=False)
 
 
         if response.status_code != 200:
@@ -109,13 +109,12 @@ def run_step_1():
 
             # основні партії
             results.append({
-                "id": party['id'],
+                "party_id": party['id'],
                 "is_active": party['is_active'],
                 "party_type": "main",
                 "main_party_id": party['id'],
                 "code": party['code'],
                 "name": party['name'],
-                # print(party.get('web_site_url', '')),
                 "web_site_url": party.get('web_site_url') or '',
                 "actual_address_same_register": party['actual_address_same_register'],
                 "created_at": party['created_at'],
@@ -125,21 +124,21 @@ def run_step_1():
                 "head_info": head_info,
                 "register_address": register_address,
                 "actual_address": actual_address,
-                "parent": party['parent']
+                "parent": party['parent']   #list
             })
 
 
 
             if party.get("regional_offices"):
                 regional_offices = party.get("regional_offices")
-                for reg_office in regional_offices:
+                for regional_office in regional_offices:
                     results.append({
-                        "id": reg_office['id'],
-                        "is_active": reg_office['is_active'],
+                        "party_id": regional_office['id'],
+                        "is_active": regional_office['is_active'],
                         "party_type": 'regional',
                         "main_party_id": party['id'],
-                        "code": reg_office['code'],
-                        "name": reg_office['name'],
+                        "code": regional_office['code'],
+                        "name": regional_office['name'],
                         "web_site_url": None,
                         "actual_address_same_register": None,
                         "created_at": None,

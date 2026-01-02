@@ -16,7 +16,7 @@ def run_step_2():
     # Фільтрую тільки ті партії, де тип == "main"
     # Беру колонку 'id'
     df_main = df[df["party_type"] == "main"]
-    party_ids = df_main["id"].tolist()
+    party_ids = df_main["party_id"].tolist()
 
     results = []
 
@@ -31,7 +31,6 @@ def run_step_2():
 
         data = response.json()
         reports_main = data.get("results", {}).get("list", [])
-        # reports_main = data.get('results', {}).get('list', [])
 
 
         if not reports_main:
