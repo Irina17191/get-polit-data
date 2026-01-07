@@ -7,9 +7,10 @@ headers = {
 }
 
 df = pd.read_excel("step_2_party_reports_all.xlsx")
-report_ids = df["id"].tolist()
+report_ids = df["report_id"].tolist()
 
 results = []
+
 
 for report_id in report_ids:
     url = f"https://politdata.nazk.gov.ua/api/v2/party/report/{report_id}/movable"
@@ -20,31 +21,13 @@ for report_id in report_ids:
         continue
 
     data = response.json()
-    data_movable = data["results"]["list"]
+    data_movable = data.get("results", {}).get("list", [])
 
     if not data_movable:
         continue
 
 
     for item in data_movable:
-        # record = {
-        #     "report_id": report_id,
-        #     "id_movable": item.get('id'),
-        #     "report_status": item.get('report_status'),
-        #     "movable_type": item.get('movable_type'),
-        #     "owning_date": item.get('owning_date'),
-        #     "owning_cost": item.get('owning_cost'),
-        #     "description": item.get('description'),
-        #     "manufacturer_name": item.get('manufacturer_name'),
-        #     "trade_mark": item.get('trade_mark'),
-        #     "movable_rights": item.get('movable_rights'),
-        #     "substraction_date": item.get('substraction_date'),
-        #     "created_at": item.get('created_at')
-        # }
-        #
-        # print(record)
-
-
         results.append({
             "report_id": report_id,
             "id_movable": item.get('id'),
