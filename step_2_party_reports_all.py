@@ -1,4 +1,4 @@
-import requests
+import requests    # 1cf95166-a8c5-4363-a268-36ab0d276b87
 import pandas as pd
 
 
@@ -9,14 +9,14 @@ headers = {
 
 
 def run_step_2():
+    print("Починаю виконувати step_2: party reports all")
+
 
     # Читаю Excel-файл (файл має бути в тій самій папці, що й main.py)
     df = pd.read_excel("step_1_political_parties_all.xlsx")
 
-    # Фільтрую тільки ті партії, де тип == "main"
     # Беру колонку 'id'
-    df_main = df[df["party_type"] == "main"]
-    party_ids = df_main["party_id"].tolist()
+    party_ids = df["party_id"].tolist()
 
     results = []
 
@@ -30,7 +30,7 @@ def run_step_2():
             continue
 
         data = response.json()
-        reports_main = data.get("results", {}).get("list", [])
+        reports_main = data.get('results', {}).get('list', [])
 
 
         if not reports_main:
@@ -40,7 +40,7 @@ def run_step_2():
         for report in reports_main:
             # Основний звіт
             results.append({
-                "id": report['id'],
+                "report_id": report['id'],
                 "schema_version": report['schema_version'],
                 "report_type": report['report_type'],
                 "year": report['year'],
@@ -62,7 +62,7 @@ def run_step_2():
                 reports_regional = report.get('regional_reports')
                 for report_r in reports_regional:
                     results.append({
-                        "id": report_r['id'],
+                        "report_id": report_r['id'],
                         "schema_version": None,
                         "report_type": "regional",
                         "year": report_r['year'],
@@ -81,8 +81,27 @@ def run_step_2():
 
     # збереження в Excel
     df_reports = pd.DataFrame(results)
-    df_reports.to_excel("step_2_party_reports_all.xlsx", index=False)
 
+    total_rows = len(df_reports)
+    print(f"Всього рядків: {total_rows}")
+
+    unique_reports = df_reports["report_id"].nunique()
+    print(f"Унікальних report_id: {unique_reports}")
+
+
+    if total_rows != unique_reports:
+        print(f"Виявлено кількість дублікатів report_id: {total_rows - unique_reports}")
+
+        df_reports = df_reports.drop_duplicates(
+            subset=["report_id"],
+            keep="first"
+        )
+        print("Дублікати видалено")
+    else:
+        print("Дублікатів report_id не виявлено")
+
+
+    df_reports.to_excel("step_2_party_reports_all.xlsx", index=False)
 
     print("Дані про звіти збережено у step_2_party_reports_all.xlsx")
 
