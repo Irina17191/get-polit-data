@@ -12,8 +12,8 @@ def run_step_2():
     print("Починаю виконувати step_2: party reports all")
 
 
-    # Читаю Excel-файл (файл має бути в тій самій папці, що й main.py)
-    df = pd.read_excel("step_1_political_parties_all.xlsx")
+    # Читаю cvs-файл (файл має бути в тій самій папці, що й main.py)
+    df = pd.read_csv("step_1_political_parties_all.csv", encoding="utf-8-sig")
 
     # Беру колонку 'id'
     party_ids = df["party_id"].tolist()
@@ -101,9 +101,10 @@ def run_step_2():
         print("Дублікатів report_id не виявлено")
 
 
-    df_reports.to_excel("step_2_party_reports_all.xlsx", index=False)
+    #df_reports.to_excel("step_2_party_reports_all.xlsx", index=False)
+    df_reports.to_csv("output/step_2_party_reports_all.csv", index=False, encoding="utf-8-sig")
 
-    print("Дані про звіти збережено у step_2_party_reports_all.xlsx")
+    print("Дані про звіти збережено у step_2_party_reports_all.csv")
 
 
 

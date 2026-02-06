@@ -22,7 +22,7 @@ def run_step_10():
     print("Починаю виконувати step_10: payments of each report")
 
     # Завантажую список ID кожного звіту
-    df = pd.read_excel("step_2_party_reports_all.xlsx")
+    df = pd.read_csv("step_2_party_reports_all.csv", encoding="utf-8-sig")
     report_ids = df["report_id"].tolist()
 
     results = []
@@ -191,8 +191,9 @@ def run_step_10():
             })
 
     df = pd.DataFrame(results)
-    df.to_excel("step_10_payments_of_each_report.xlsx", index=False)
-    print("Дані про звіти збережено у step_10_payments_of_each_report.xlsx")
+    df.to_csv("output/step_10_payments_of_each_report.csv", index=False, encoding="utf-8-sig")
+
+    print("Дані про звіти збережено у step_10_payments_of_each_report.csv")
 
 
 

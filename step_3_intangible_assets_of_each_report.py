@@ -10,7 +10,8 @@ def run_step_3():
     }
 
 
-    df = pd.read_excel("step_2_party_reports_all.xlsx")
+    #df = pd.read_excel("step_2_party_reports_all.xlsx")
+    df = pd.read_csv("step_2_party_reports_all.csv", encoding="utf-8-sig")
 
     report_ids = df["report_id"].tolist()
 
@@ -46,8 +47,8 @@ def run_step_3():
             })
 
     df  = pd.DataFrame(results)
-    df.to_excel("step_3_intangiable_assets_of_each_report.xlsx", index=False)
-    print("Дані про нематеріальні активи для кожного звіту збережено у step_3_intangiable_assets_of_each_report.xlsx")
+    df.to_csv("output/step_3_intangiable_assets_of_each_report.csv", index=False, encoding="utf-8-sig")
+    print("Дані про нематеріальні активи для кожного звіту збережено у step_3_intangiable_assets_of_each_report.csv")
 
 
 

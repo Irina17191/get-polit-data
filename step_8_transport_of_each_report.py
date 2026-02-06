@@ -23,7 +23,7 @@ def run_step_8():
 
 
     # Завантажую список ID кожного звіту
-    df = pd.read_excel("step_2_party_reports_all.xlsx")
+    df = pd.read_csv("step_2_party_reports_all.csv", encoding="utf-8-sig")
     report_ids = df["report_id"].tolist()
 
     results = []
@@ -127,8 +127,9 @@ def run_step_8():
 
 
     df = pd.DataFrame(results)
-    df.to_excel("step_8_transport_of_each_report.xlsx", index=False)
-    print("Дані про звіти збережено у step_8_transport_of_each_report.xlsx")
+    df.to_csv("output/step_8_transport_of_each_report.csv", index=False, encoding="utf-8-sig")
+    print("Дані про звіти збережено у step_8_transport_of_each_report.csv")
+
 
 
 

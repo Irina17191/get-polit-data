@@ -26,8 +26,10 @@ payment_types_list = ['monetary_contributions',
               'transfer_expenses']
 
 def run_step_11():
+    print("Починаю виконувати step_11: payments by type of each report")
+
     # Завантажую список ID кожного звіту
-    df = pd.read_excel("step_2_party_reports_all.xlsx")
+    df = pd.read_csv("step_2_party_reports_all.csv", encoding="utf-8-sig")
     report_ids = df["report_id"].tolist()
 
     results = []
@@ -55,7 +57,7 @@ def run_step_11():
 
                     "payment_id": None,
                     # порівняти з "report_id" щоб були однакові та видалити наступний рядок
-                    "report_id_2": None,
+                    # "report_id_2": None,
                     "group_code": None,
                     "payment_type": None,
                     "payment_code": None,
@@ -110,7 +112,7 @@ def run_step_11():
 
                     "payment_id": None,
                     # порівняти з "report_id" щоб були однакові та видалити наступний рядок
-                    "report_id_2": None,
+                    # "report_id_2": None,
                     "group_code": None,
                     "payment_type": None,
                     "payment_code": None,
@@ -162,7 +164,7 @@ def run_step_11():
 
                     "payment_id": item.get("id"),
                     # порівняти з "report_id" щоб були однакові та видалити наступний рядок
-                    "report_id_2": item.get("report_id"),
+                    # "report_id_2": item.get("report_id"),
                     "group_code": item.get("group_code"),
                     "payment_type": item.get("payment_type"),
                     "payment_code": item.get("payment_code"),
@@ -209,8 +211,8 @@ def run_step_11():
 
 
     df = pd.DataFrame(results)
-    df.to_excel("step_11_payments_by_type_of_each_report.xlsx", index=False)
-    print("Дані про звіти збережено у step_11_payments_by_type_of_each_report.xlsx")
+    df.to_csv("output/step_11_payments_by_type_of_each_report.csv", index=False, encoding="utf-8-sig")
+    print("Дані про звіти збережено у step_11_payments_by_type_of_each_report.csv")
 
 if __name__ == "__main__":
     run_step_11()

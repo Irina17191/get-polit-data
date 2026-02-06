@@ -1,5 +1,7 @@
 import requests
 import pandas as pd
+import time
+from requests.exceptions import ReadTimeout, ConnectionError, RequestException
 
 
 url = "https://politdata.nazk.gov.ua/api/v2/parties"
@@ -17,7 +19,10 @@ def to_one_line(parts: list) -> str:
 def to_one_line_without_comma(parts: list) -> str:
     return " ".join(filter(None, parts))
 
+
 def run_step_1():
+    print("Починаю виконувати step_1: political parties all")
+
     # список для збереження в Excel
     results = []
     page = 1
@@ -166,9 +171,9 @@ def run_step_1():
     print(df['party_type'].value_counts())
     ##
 
-    df.to_excel("step_1_political_parties_all.xlsx", index=False)
+    df.to_csv("output/step_1_political_parties_all.csv", index=False, encoding="utf-8-sig")
 
-    print("Дані збережено у step_1_political_parties_all.xlsx")
+    print("Дані збережено у sstep_1_political_parties_all.csv")
 
 
 if __name__ == "__main__":

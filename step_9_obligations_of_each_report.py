@@ -22,7 +22,7 @@ def run_step_9():
     print("Починаю виконувати step_9: obligations of each report")
 
     # Завантажую список ID кожного звіту
-    df = pd.read_excel("step_2_party_reports_all.xlsx")
+    df = pd.read_csv("step_2_party_reports_all.csv", encoding="utf-8-sig")
     report_ids = df["report_id"].tolist()
 
     results = []
@@ -63,9 +63,9 @@ def run_step_9():
             continue
 
         data = response.json()
-        data_transport = data.get("results", {}).get("list", [])
+        data_obligations = data.get("results", {}).get("list", [])
 
-        if not data_transport:
+        if not data_obligations:
             results.append({
                 "report_id": report_id,
                 "obligation_id": None,
@@ -86,7 +86,7 @@ def run_step_9():
             })
             continue
 
-        for item in data_transport:
+        for item in data_obligations:
             results.append({
                 "report_id": report_id,
                 "obligation_id": item.get("id"),
@@ -107,8 +107,8 @@ def run_step_9():
             })
 
     df = pd.DataFrame(results)
-    df.to_excel("step_9_obligations_of_each_report.xlsx", index=False)
-    print("Дані про звіти збережено у step_9_obligations_of_each_report.xlsx")
+    df.to_csv("output/step_9_obligations_of_each_report.csv", index=False, encoding="utf-8-sig")
+    print("Дані про звіти збережено у step_9_obligations_of_each_report.csv")
 
 
 

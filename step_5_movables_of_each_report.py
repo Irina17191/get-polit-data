@@ -11,7 +11,8 @@ def run_step_5():
     print("Починаю виконувати step_5: movables of each report")
 
 
-    df = pd.read_excel("step_2_party_reports_all.xlsx")
+    # df = pd.read_excel("step_2_party_reports_all.xlsx")
+    df = pd.read_csv("step_2_party_reports_all.csv", encoding="utf-8-sig")
     report_ids = df["report_id"].tolist()
 
     results = []
@@ -49,8 +50,9 @@ def run_step_5():
             })
 
     df = pd.DataFrame(results)
-    df.to_excel("step_5_movables_of_each_report.xlsx", index=False)
-    print("Дані про звіти збережено у step_5_movables_of_each_report.xlsx")
+    df.to_csv("output/step_5_movables_of_each_report.csv", index=False, encoding="utf-8-sig")
+    print("Дані про звіти збережено у step_5_movables_of_each_report.csv")
+
 
 
 if __name__ == "__main__":
