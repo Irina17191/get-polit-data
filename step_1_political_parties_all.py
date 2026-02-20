@@ -173,7 +173,7 @@ def run_step_1():
 
     df.to_csv("output/step_1_political_parties_all.csv", index=False, encoding="utf-8-sig")
 
-    print("Дані збережено у sstep_1_political_parties_all.csv")
+    print("Дані збережено у step_1_political_parties_all.csv")
 
 
 if __name__ == "__main__":

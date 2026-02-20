@@ -22,7 +22,7 @@ def run_step_9():
     print("Починаю виконувати step_9: obligations of each report")
 
     # Завантажую список ID кожного звіту
-    df = pd.read_csv("step_2_party_reports_all.csv", encoding="utf-8-sig")
+    df = pd.read_csv("step_2_party_reports_all___.csv", encoding="utf-8-sig")
     report_ids = df["report_id"].tolist()
 
     results = []
