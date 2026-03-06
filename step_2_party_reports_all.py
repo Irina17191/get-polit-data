@@ -1,5 +1,28 @@
 import requests    # 1cf95166-a8c5-4363-a268-36ab0d276b87
 import pandas as pd
+import time
+import logging
+
+
+# стандартний логінг
+#logging.basicConfig(
+#    filename="steps.log",
+#    level=logging.INFO,
+#    format="%(asctime)s - %(levelname)s - %(message)s"
+#)
+
+
+# щоб логування і записувалось у файл і виводилось у консоль
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("steps.log"),
+        logging.StreamHandler()
+    ]
+)
+
+
 
 
 headers = {
@@ -9,7 +32,7 @@ headers = {
 
 
 def run_step_2():
-    print("Починаю виконувати step_2: party reports all")
+    logging.info("Починаю виконувати step_2: party reports all")
 
 
     # Читаю cvs-файл
@@ -20,13 +43,33 @@ def run_step_2():
 
     results = []
 
+    session = requests.Session()
+
+    failed_ids = []
+
+
     # Проходимося по кожному id
     for party_id in party_ids:
-        url = f'https://politdata.nazk.gov.ua/api/v2/party/{party_id}/reports'
-        response = requests.post(url, headers=headers)
+        success = False
+        for attempt in range(5):
+            try:
+                url = f'https://politdata.nazk.gov.ua/api/v2/party/{party_id}/reports'
+                response = session.post(url, headers=headers, timeout=10, verify=False) # verify=False - відключення перевірки SSL сертифікатів
+                response.raise_for_status()
+                success = True
+                break
+            except requests.exceptions.RequestException as e:
+                logging.warning(f"Спроба {attempt+1} для {party_id} неуспішна {e}")
 
-        if response.status_code != 200:
-            print(f"Помилка для партії {party_id}: {response.status_code}")
+                sleep_time = 2 ** attempt
+                time.sleep(sleep_time)
+
+                if attempt == 4:
+                    failed_ids.append(party_id)
+                    logging.error(f"ID {party_id} повністю зафейлився після 5 спроб")
+
+
+        if not success:
             continue
 
         data = response.json()
@@ -83,28 +126,30 @@ def run_step_2():
     df_reports = pd.DataFrame(results)
 
     total_rows = len(df_reports)
-    print(f"Всього рядків: {total_rows}")
+    logging.info(f"Всього рядків: {total_rows}")
 
     unique_reports = df_reports["report_id"].nunique()
-    print(f"Унікальних report_id: {unique_reports}")
+    logging.info(f"Унікальних report_id: {unique_reports}")
 
 
     if total_rows != unique_reports:
-        print(f"Виявлено кількість дублікатів report_id: {total_rows - unique_reports}")
+        logging.info(f"Виявлено кількість дублікатів report_id: {total_rows - unique_reports}")
 
         df_reports = df_reports.drop_duplicates(
             subset=["report_id"],
             keep="first"
         )
-        print("Дублікати видалено")
+        logging.info("Дублікати видалено")
     else:
-        print("Дублікатів report_id не виявлено")
+        logging.info("Дублікатів report_id не виявлено")
 
 
     #df_reports.to_excel("step_2_party_reports_all.xlsx", index=False)
     df_reports.to_csv("output/step_2_party_reports_all.csv", index=False, encoding="utf-8-sig")
 
-    print("Дані про звіти збережено у output/step_2_party_reports_all.csv")
+    session.close()
+
+    logging.info("Дані про звіти збережено у output/step_2_party_reports_all.csv")
 
 
 
