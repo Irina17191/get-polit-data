@@ -2,6 +2,10 @@ import requests    # 1cf95166-a8c5-4363-a268-36ab0d276b87
 import pandas as pd
 import time
 import logging
+import urllib3
+
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 # стандартний логінг
