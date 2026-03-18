@@ -1,7 +1,5 @@
 import requests
 import pandas as pd
-import time
-from requests.exceptions import ReadTimeout, ConnectionError, RequestException
 
 
 url = "https://politdata.nazk.gov.ua/api/v2/parties"
