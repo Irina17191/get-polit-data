@@ -6,58 +6,100 @@
 # також віддає дані у розділі payments
 # також віддає дані у розділі payments type
 
-
 import requests
 import pandas as pd
 import time
+import logging
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("steps.log"),
+        logging.StreamHandler()
+    ]
+)
 
 
 headers = {
     "accept": "application/json"
 }
 
-payment_types_list = ['monetary_contributions',
-              'other_contributions',
-              'state_funding',
-              'other_incomes',
-              'budget_expenses',
-              'outgoing_expenses',
-              'return_expenses',
-              'transfer_expenses']
+
+payment_types_list = [
+    'monetary_contributions',
+    'other_contributions',
+    'state_funding',
+    'other_incomes',
+    'budget_expenses',
+    'outgoing_expenses',
+    'return_expenses',
+    'transfer_expenses'
+]
+
 
 def run_step_11():
-    print("Починаю виконувати step_11: payments by type of each report")
+    logging.info("Починаю виконувати step_11: payments by type of each report")
 
-    # Завантажую список ID кожного звіту
-    df = pd.read_csv("step_2_party_reports_all___.csv", encoding="utf-8-sig")
+    df = pd.read_csv("output/step_2_party_reports_all.csv", encoding="utf-8-sig")
     report_ids = df["report_id"].tolist()
 
     results = []
 
+    session = requests.Session()
+
+    failed_ids = []
+
     for report_id in report_ids:
+
         for payment_type in payment_types_list:
+
             url = f"https://politdata.nazk.gov.ua/api/v2/party/report/{report_id}/payments/{payment_type}"
 
-            response = None
+            success = False
 
-            for attempt in range(10):  # максимум 10 спроб
+            for attempt in range(10):
+
                 try:
-                    response = requests.post(url, headers=headers, timeout=15)
-                    if response.status_code == 200:
-                        break  # якщо успішно - виходжу з циклу retry
 
-                except Exception as e:
-                    print(f"Спроба {attempt + 1} не вдалась. Помилка запиту для звіту з report_id: {report_id} - {e}")
-                    time.sleep(0.3)
+                    response = session.post(
+                        url,
+                        headers=headers,
+                        timeout=15,
+                        verify=False
+                    )
 
-            else:  # якщо жодна спроба не вдалась
+                    response.raise_for_status()
+
+                    success = True
+                    break
+
+                except requests.exceptions.RequestException as e:
+
+                    logging.warning(
+                        f"Спроба {attempt + 1} не вдалась для report_id {report_id}, type {payment_type}: {e}"
+                    )
+
+                    sleep_time = 2 ** attempt
+                    time.sleep(sleep_time)
+
+                    if attempt == 9:
+                        failed_ids.append((report_id, payment_type))
+                        logging.error(
+                            f"ID {report_id} з типом {payment_type} повністю зафейлився після 10 спроб"
+                        )
+
+            if not success:
+
                 results.append({
                     "report_id": report_id,
                     "payment_type_api": payment_type,
 
                     "payment_id": None,
-                    # порівняти з "report_id" щоб були однакові та видалити наступний рядок
-                    # "report_id_2": None,
                     "group_code": None,
                     "payment_type": None,
                     "payment_code": None,
@@ -100,19 +142,21 @@ def run_step_11():
 
                     "status": "FAILED"
                 })
+
                 continue
 
+
             data = response.json()
+
             data_payments = data.get("results", {}).get("list", [])
 
             if not data_payments:
+
                 results.append({
                     "report_id": report_id,
                     "payment_type_api": payment_type,
 
                     "payment_id": None,
-                    # порівняти з "report_id" щоб були однакові та видалити наступний рядок
-                    # "report_id_2": None,
                     "group_code": None,
                     "payment_type": None,
                     "payment_code": None,
@@ -155,16 +199,17 @@ def run_step_11():
 
                     "status": "NO_ITEMS_FOR_TYPE"
                 })
+
                 continue
 
+
             for item in data_payments:
+
                 results.append({
                     "report_id": report_id,
                     "payment_type_api": payment_type,
 
                     "payment_id": item.get("id"),
-                    # порівняти з "report_id" щоб були однакові та видалити наступний рядок
-                    # "report_id_2": item.get("report_id"),
                     "group_code": item.get("group_code"),
                     "payment_type": item.get("payment_type"),
                     "payment_code": item.get("payment_code"),
@@ -209,10 +254,232 @@ def run_step_11():
                 })
 
 
-
     df = pd.DataFrame(results)
-    df.to_csv("output/step_11_payments_by_type_of_each_report.csv", index=False, encoding="utf-8-sig")
-    print("Дані про звіти збережено у step_11_payments_by_type_of_each_report.csv")
+
+    df.to_csv(
+        "output/step_11_payments_by_type_of_each_report.csv",
+        index=False,
+        encoding="utf-8-sig"
+    )
+
+    session.close()
+
+    logging.info("Дані про звіти збережено у step_11_payments_by_type_of_each_report.csv")
+
 
 if __name__ == "__main__":
     run_step_11()
+
+
+
+
+#
+# import requests
+# import pandas as pd
+# import time
+#
+#
+# headers = {
+#     "accept": "application/json"
+# }
+#
+# payment_types_list = ['monetary_contributions',
+#               'other_contributions',
+#               'state_funding',
+#               'other_incomes',
+#               'budget_expenses',
+#               'outgoing_expenses',
+#               'return_expenses',
+#               'transfer_expenses']
+#
+# def run_step_11():
+#     print("Починаю виконувати step_11: payments by type of each report")
+#
+#     # Завантажую список ID кожного звіту
+#     df = pd.read_csv("step_2_party_reports_all___.csv", encoding="utf-8-sig")
+#     report_ids = df["report_id"].tolist()
+#
+#     results = []
+#
+#     for report_id in report_ids:
+#         for payment_type in payment_types_list:
+#             url = f"https://politdata.nazk.gov.ua/api/v2/party/report/{report_id}/payments/{payment_type}"
+#
+#             response = None
+#
+#             for attempt in range(10):  # максимум 10 спроб
+#                 try:
+#                     response = requests.post(url, headers=headers, timeout=15)
+#                     if response.status_code == 200:
+#                         break  # якщо успішно - виходжу з циклу retry
+#
+#                 except Exception as e:
+#                     print(f"Спроба {attempt + 1} не вдалась. Помилка запиту для звіту з report_id: {report_id} - {e}")
+#                     time.sleep(0.3)
+#
+#             else:  # якщо жодна спроба не вдалась
+#                 results.append({
+#                     "report_id": report_id,
+#                     "payment_type_api": payment_type,
+#
+#                     "payment_id": None,
+#                     # порівняти з "report_id" щоб були однакові та видалити наступний рядок
+#                     # "report_id_2": None,
+#                     "group_code": None,
+#                     "payment_type": None,
+#                     "payment_code": None,
+#                     "payment_number": None,
+#                     "payment_amount": None,
+#                     "payment_currency": None,
+#                     "payment_reason": None,
+#                     "payment_purpose": None,
+#                     "payment_operation_date": None,
+#                     "payment_instruction_date": None,
+#                     "payment_description": None,
+#                     "refund_date": None,
+#                     "refund_amount": None,
+#                     "refund_budget_amount": None,
+#                     "refund_reason": None,
+#                     "refund_purpose": None,
+#                     "refund_description": None,
+#                     "payer_type": None,
+#                     "payer_name": None,
+#                     "payer_code": None,
+#                     "payer_birthday": None,
+#                     "payer_address": None,
+#                     "payer_account_type": None,
+#                     "payer_account_iban": None,
+#                     "payer_bank_code": None,
+#                     "payer_bank_name": None,
+#                     "payer_bank_address": None,
+#                     "receiver_type": None,
+#                     "receiver_name": None,
+#                     "receiver_code": None,
+#                     "receiver_birthday": None,
+#                     "receiver_address": None,
+#                     "receiver_account_type": None,
+#                     "receiver_account_iban": None,
+#                     "receiver_bank_code": None,
+#                     "receiver_bank_name": None,
+#                     "receiver_bank_address": None,
+#                     "created_at": None,
+#                     "updated_at": None,
+#
+#                     "status": "FAILED"
+#                 })
+#                 continue
+#
+#             data = response.json()
+#             data_payments = data.get("results", {}).get("list", [])
+#
+#             if not data_payments:
+#                 results.append({
+#                     "report_id": report_id,
+#                     "payment_type_api": payment_type,
+#
+#                     "payment_id": None,
+#                     # порівняти з "report_id" щоб були однакові та видалити наступний рядок
+#                     # "report_id_2": None,
+#                     "group_code": None,
+#                     "payment_type": None,
+#                     "payment_code": None,
+#                     "payment_number": None,
+#                     "payment_amount": None,
+#                     "payment_currency": None,
+#                     "payment_reason": None,
+#                     "payment_purpose": None,
+#                     "payment_operation_date": None,
+#                     "payment_instruction_date": None,
+#                     "payment_description": None,
+#                     "refund_date": None,
+#                     "refund_amount": None,
+#                     "refund_budget_amount": None,
+#                     "refund_reason": None,
+#                     "refund_purpose": None,
+#                     "refund_description": None,
+#                     "payer_type": None,
+#                     "payer_name": None,
+#                     "payer_code": None,
+#                     "payer_birthday": None,
+#                     "payer_address": None,
+#                     "payer_account_type": None,
+#                     "payer_account_iban": None,
+#                     "payer_bank_code": None,
+#                     "payer_bank_name": None,
+#                     "payer_bank_address": None,
+#                     "receiver_type": None,
+#                     "receiver_name": None,
+#                     "receiver_code": None,
+#                     "receiver_birthday": None,
+#                     "receiver_address": None,
+#                     "receiver_account_type": None,
+#                     "receiver_account_iban": None,
+#                     "receiver_bank_code": None,
+#                     "receiver_bank_name": None,
+#                     "receiver_bank_address": None,
+#                     "created_at": None,
+#                     "updated_at": None,
+#
+#                     "status": "NO_ITEMS_FOR_TYPE"
+#                 })
+#                 continue
+#
+#             for item in data_payments:
+#                 results.append({
+#                     "report_id": report_id,
+#                     "payment_type_api": payment_type,
+#
+#                     "payment_id": item.get("id"),
+#                     # порівняти з "report_id" щоб були однакові та видалити наступний рядок
+#                     # "report_id_2": item.get("report_id"),
+#                     "group_code": item.get("group_code"),
+#                     "payment_type": item.get("payment_type"),
+#                     "payment_code": item.get("payment_code"),
+#                     "payment_number": item.get("payment_number"),
+#                     "payment_amount": item.get("payment_amount"),
+#                     "payment_currency": item.get("payment_currency"),
+#                     "payment_reason": item.get("payment_reason"),
+#                     "payment_purpose": item.get("payment_purpose"),
+#                     "payment_operation_date": item.get("payment_operation_date"),
+#                     "payment_instruction_date": item.get("payment_instruction_date"),
+#                     "payment_description": item.get("payment_description"),
+#                     "refund_date": item.get("refund_date"),
+#                     "refund_amount": item.get("refund_amount"),
+#                     "refund_budget_amount": item.get("refund_budget_amount"),
+#                     "refund_reason": item.get("refund_reason"),
+#                     "refund_purpose": item.get("refund_purpose"),
+#                     "refund_description": item.get("refund_description"),
+#                     "payer_type": item.get("payer_type"),
+#                     "payer_name": item.get("payer_name"),
+#                     "payer_code": item.get("payer_code"),
+#                     "payer_birthday": item.get("payer_birthday"),
+#                     "payer_address": item.get("payer_address"),
+#                     "payer_account_type": item.get("payer_account_type"),
+#                     "payer_account_iban": item.get("payer_account_iban"),
+#                     "payer_bank_code": item.get("payer_bank_code"),
+#                     "payer_bank_name": item.get("payer_bank_name"),
+#                     "payer_bank_address": item.get("payer_bank_address"),
+#                     "receiver_type": item.get("receiver_type"),
+#                     "receiver_name": item.get("receiver_name"),
+#                     "receiver_code": item.get("receiver_code"),
+#                     "receiver_birthday": item.get("receiver_birthday"),
+#                     "receiver_address": item.get("receiver_address"),
+#                     "receiver_account_type": item.get("receiver_account_type"),
+#                     "receiver_account_iban": item.get("receiver_account_iban"),
+#                     "receiver_bank_code": item.get("receiver_bank_code"),
+#                     "receiver_bank_name": item.get("receiver_bank_name"),
+#                     "receiver_bank_address": item.get("receiver_bank_address"),
+#                     "created_at": item.get("created_at"),
+#                     "updated_at": item.get("updated_at"),
+#
+#                     "status": "OK"
+#                 })
+#
+#
+#
+#     df = pd.DataFrame(results)
+#     df.to_csv("output/step_11_payments_by_type_of_each_report.csv", index=False, encoding="utf-8-sig")
+#     print("Дані про звіти збережено у step_11_payments_by_type_of_each_report.csv")
+#
+# if __name__ == "__main__":
+#     run_step_11()
